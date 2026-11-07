@@ -40,6 +40,9 @@ test('scrollbar: the browser draws an overlay scrollbar (the setup of this spec 
   page,
   server,
 }) => {
+  // Chromium on Linux keeps a classic 15 px scrollbar with this switch. The session test below still
+  // holds there, because the style applies to either kind of scrollbar.
+  test.skip(process.platform === 'linux', 'Chromium on Linux ignores the overlay scrollbar switch');
   await page.goto(server.url('/chat-inner.html'));
   const sizes = await page.evaluate(() => {
     const panel = /** @type {HTMLElement} */ (document.querySelector('#panel'));

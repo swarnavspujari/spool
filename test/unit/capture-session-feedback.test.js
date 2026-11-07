@@ -399,6 +399,7 @@ describe('readShortcuts and the config', () => {
     const starter = createStarter({
       schedule: () => 0,
       cancel: () => {},
+      platform: 'windows',
       readShortcutKeys: async () => {
         throw new Error('no');
       },
