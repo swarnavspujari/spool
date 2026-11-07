@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Composer in the style of a chat app</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; margin: 0; height: 100vh; display: flex;
+      flex-direction: column; }
+    .messages { flex: 1; overflow: auto; padding: 24px; }
+    .composer { margin: 0 24px 24px; padding: 8px 12px; border: 1px solid #888; border-radius: 16px;
+      display: flex; align-items: flex-end; gap: 8px; }
+    .ProseMirror { flex: 1; min-height: 48px; max-height: 200px; overflow: auto; outline: none;
+      white-space: pre-wrap; }
+    .ProseMirror p { margin: 0; }
+    .ProseMirror p.is-empty::before { content: attr(data-placeholder); color: #888; float: left;
+      height: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="messages" id="messages">
+    <h1>Chat</h1>
+    <p>Messages are here. The message box is at the bottom.</p>
+  </div>
+  <div class="composer" id="composer">
+    <!-- ProseMirror: a contenteditable root with paragraphs inside. -->
+    <div class="ProseMirror" contenteditable="true" role="textbox" aria-label="Write your prompt"
+      data-gen="1"><p data-placeholder="Reply..." class="is-empty"><br class="ProseMirror-trailingBreak"></p></div>
+    <button type="button" id="send">Send</button>
+  </div>
+  <script>
+    // Like a React app: one listener at the document for every paste. It takes a paste only when
+    // the target is inside the composer, and it takes files only to attach them. A page of this
+    // kind ignores an event at <body>, and an event at an editor that was replaced.
+    // ?strict: it also ignores an event that the browser did not make (isTrusted), like an app that
+    // does not trust a script's fake paste.
+    const strict = new URLSearchParams(location.search).has('strict');
+    window.__seen = [];
+    window.__pasted = null;
+    window.__pastedBase64 = null;
+    const readBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1]);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    document.addEventListener('paste', (event) => {
+      const editor = event.target instanceof Element ? event.target.closest('.ProseMirror') : null;
+      const files = [...(event.clipboardData?.files ?? [])];
+      window.__seen.push({
+        trusted: event.isTrusted,
+        gen: editor ? Number(editor.dataset.gen) : 0,
+        files: files.length,
+        target: event.target instanceof Element ? event.target.tagName : '',
+      });
+      if (!editor || files.length === 0) return;
+      if (strict && !event.isTrusted) return;
+      window.__pasted = {
+        gen: Number(editor.dataset.gen),
+        names: files.map((f) => f.name),
+        types: files.map((f) => f.type),
+        sizes: files.map((f) => f.size),
+        trusted: event.isTrusted,
+      };
+      Promise.all(files.map(readBase64)).then((list) => {
+        window.__pastedBase64 = list;
+      });
+      event.preventDefault();
+    });
+
+    // A single-page app makes the composer again when the chat changes: the old node goes away,
+    // a new one takes its place, and nothing has the focus.
+    window.__remount = () => {
+      const old = document.querySelector('.ProseMirror');
+      const fresh = old.cloneNode(true);
+      fresh.dataset.gen = String(Number(old.dataset.gen) + 1);
+      old.replaceWith(fresh);
+      return fresh.dataset.gen;
+    };
+    window.__blur = () => {
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      return document.activeElement === document.body;
+    };
+  </script>
+</body>
+</html>

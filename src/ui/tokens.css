@@ -1,0 +1,104 @@
+/* Spool design tokens for extension pages (result, options). Light and dark follow the system.
+ * Link this file before base.css. */
+
+:root {
+  color-scheme: light dark;
+
+  /* Color: light */
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1b1c1e;
+  --muted: #5e6166;
+  --line: #e4e5e7;
+  --outline: #8a8d93;
+  --accent: #ffb224;
+  --on-accent: #1b1c1e;
+  --accent-text: #8a5300;
+  --accent-text-hover: #6b4000;
+  --accent-hover: #ffc04d;
+  --accent-press: #f2a50f;
+  --accent-edge: #8a5300;
+  --accent-tint: #fff4de;
+  --accent-tint-soft: #fff9ec;
+  --hover: #f1f2f4;
+  --track: #ededeb;
+  --raised: #ffffff;
+  --skeleton: #ecece9;
+  --danger: #b3261e;
+  --danger-bg: #fdecea;
+  --halo: #1b1c1e;
+  --shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px #e4e5e7;
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  /* Type: system fonts, no web fonts. `system-ui` and `-apple-system` come first, so macOS and
+   * Linux use their own UI font. Windows has its Segoe UI family behind them. Display is for 20 px
+   * and up. */
+  --font-text: system-ui, -apple-system, 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI',
+    Roboto, Cantarell, sans-serif;
+  --font-display: system-ui, -apple-system, 'Segoe UI Variable Display', 'Segoe UI Variable',
+    'Segoe UI', Roboto, Cantarell, sans-serif;
+  --fs-caption: 12px;
+  --lh-caption: 16px;
+  --fs-body: 14px;
+  --lh-body: 20px;
+  --fs-subtitle: 20px;
+  --lh-subtitle: 28px;
+  --fs-title: 28px;
+  --lh-title: 36px;
+  --fw-strong: 600;
+
+  /* Shape: 4 px keycaps, 8 px controls, 12 px cards. */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-seg: 10px;
+  --radius-lg: 12px;
+
+  /* Layout */
+  --page-max: 1232px;
+  --gutter: 24px;
+  --bar-height: 56px;
+
+  /* Motion: Fluent timing. Nothing above 250 ms. */
+  --dur-fast: 83ms;
+  --dur-base: 167ms;
+  --dur-slow: 250ms;
+  --ease-enter: cubic-bezier(0, 0, 0, 1);
+  --ease-exit: cubic-bezier(1, 0, 1, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121315;
+    --surface: #1c1d20;
+    --text: #edeef0;
+    --muted: #a1a4aa;
+    --line: #2a2c30;
+    --outline: #6e7178;
+    --on-accent: #121315;
+    --accent-text: #ffc453;
+    --accent-text-hover: #ffd98a;
+    --accent-hover: #ffc04d;
+    --accent-press: #f2a50f;
+    --accent-edge: #ffc453;
+    --accent-tint: #372f20;
+    --accent-tint-soft: #2e2920;
+    --hover: #26282c;
+    --track: #1c1d20;
+    --raised: #2e3034;
+    --skeleton: #26282c;
+    --danger: #ff8a80;
+    --danger-bg: #3a1d1b;
+    --halo: #121315;
+    --shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px #3a3c41;
+    --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Reduced motion: no movement and no fades. State changes are instant. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
+  }
+}

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smooth scroll document</title>
+  <style>
+    /* Smooth scrolling: a scrollTop assignment animates unless the code forces behavior "instant". */
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    #bands { display: block; }
+  </style>
+</head>
+<body>
+  <div id="bands"></div>
+  <script type="module">
+    import { appendBands, bandCountFromQuery } from './fixture-bands.js';
+    const count = bandCountFromQuery(1200);
+    const container = document.getElementById('bands');
+    if (container) appendBands(container, 0, count);
+    document.documentElement.dataset.bands = String(count);
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+name: Release
+
+# Push a tag vX.Y.Z on a commit of main whose "CI result" is green. The workflow:
+#   build   - read-only. Checks the tag, the manifest and package versions, and CI. Builds the zip
+#             twice with Node built-ins only (no npm package runs in this workflow) and compares
+#             the two. Writes the release notes.
+#   publish - write access, no checkout, no npm. Verifies the files, attests them, creates the
+#             release as a draft, uploads, then publishes (immutable releases need this order).
+#   store   - optional upload to the Chrome Web Store. Off until CWS_ENABLED is "true". It runs
+#             only after "publish" succeeded, so a store failure never blocks the GitHub release.
+#
+# Run it by hand ("Run workflow") for a dry run: it builds the zip, checks the CHANGELOG entry,
+# shows the notes in the job summary, keeps the zip as a workflow artifact and publishes nothing.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: read # to read "CI result" of the tagged commit
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      zip: ${{ steps.build.outputs.zip }}
+      sha256: ${{ steps.build.outputs.sha256 }}
+    steps:
+      # Full history: the notes script needs the previous tag, and the check needs origin/main.
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # Values reach the shell as environment variables, never inside the script text.
+      - name: Check the tag, the version and CI
+        id: meta
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./manifest.json').version")"
+          package_version="$(node -p "require('./package.json').version")"
+          if [ "$version" != "$package_version" ]; then
+            echo "::error::manifest.json ($version) and package.json ($package_version) differ"
+            exit 1
+          fi
+
+          if [ "$EVENT" = push ]; then
+            if [[ ! "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Tag $REF_NAME is not in the format v<major>.<minor>.<patch>"
+              exit 1
+            fi
+            if [ "$REF_NAME" != "v$version" ]; then
+              echo "::error::Tag $REF_NAME does not match the manifest and package version $version"
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$SHA" origin/main; then
+              echo "::error::Commit $SHA is not in the history of main"
+              exit 1
+            fi
+            # Only a check run of GitHub Actions counts: another app could post the same name.
+            conclusion="$(gh api "repos/$REPO/commits/$SHA/check-runs?check_name=CI%20result" \
+              --jq '[.check_runs[] | select(.app.slug == "github-actions")]
+                | sort_by(.started_at) | last | .conclusion // "missing"')"
+            if [ "$conclusion" != success ]; then
+              echo "::error::\"CI result\" for $SHA is \"$conclusion\". Wait for CI, then re-run this workflow."
+              exit 1
+            fi
+          else
+            echo "Dry run for version $version on $REF_NAME. Tag and CI checks are skipped."
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build the zip twice and compare
+        id: build
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          zip="spool-$VERSION.zip"
+          node scripts/package.mjs
+          first="$(sha256sum "dist/$zip" | cut -d' ' -f1)"
+          node scripts/package.mjs > /dev/null
+          second="$(sha256sum "dist/$zip" | cut -d' ' -f1)"
+          if [ "$first" != "$second" ]; then
+            echo "::error::Two builds of one commit give different zips ($first, $second)"
+            exit 1
+          fi
+          (cd dist && sha256sum --check "$zip.sha256")
+          mkdir release-files
+          cp "dist/$zip" "dist/$zip.sha256" release-files/
+          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+          echo "sha256=$first" >> "$GITHUB_OUTPUT"
+
+      # Fails when CHANGELOG.md has no filled-in section for this version.
+      - name: Write the release notes
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          ZIP: ${{ steps.build.outputs.zip }}
+          SHA256: ${{ steps.build.outputs.sha256 }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/release-notes.mjs "$VERSION" --repo "$REPO" --zip "$ZIP" \
+            --sha256 "$SHA256" --out release-files/RELEASE_NOTES.md
+          {
+            echo "### Release notes preview for v$VERSION"
+            echo
+            cat release-files/RELEASE_NOTES.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # On a dry run this artifact is the result: download it to test the install.
+      - name: Upload the release files
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: spool-release
+          path: release-files/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the release
+      id-token: write # sign the attestation (Sigstore)
+      attestations: write
+    steps:
+      # No checkout and no npm here. This job handles only the files of the build job.
+      - name: Download the release files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: spool-release
+          path: release-files
+
+      - name: Verify the release files
+        env:
+          ZIP: ${{ needs.build.outputs.zip }}
+          EXPECTED: ${{ needs.build.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          cd release-files
+          found="$(ls -A | sort | tr '\n' ' ')"
+          wanted="$(printf '%s\n' RELEASE_NOTES.md "$ZIP" "$ZIP.sha256" | sort | tr '\n' ' ')"
+          if [ "$found" != "$wanted" ]; then
+            echo "::error::Unexpected files: $found"
+            exit 1
+          fi
+          echo "$EXPECTED  $ZIP" | sha256sum --check -
+          sha256sum --check "$ZIP.sha256"
+
+      # Public build proof: ties the zip to this workflow, this commit and this tag.
+      - name: Attest the zip
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: release-files/${{ needs.build.outputs.zip }}
+
+      # Draft first, publish last: an immutable release cannot get assets after it is published.
+      - name: Create and publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+          ZIP: ${{ needs.build.outputs.zip }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" "release-files/$ZIP" "release-files/$ZIP.sha256" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
+            --title "Spool $VERSION" --notes-file release-files/RELEASE_NOTES.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          # Warns (does not fail) when immutable releases are off.
+          gh release verify "$TAG" --repo "$GITHUB_REPOSITORY" \
+            || echo "::warning::gh release verify failed. Are immutable releases turned on?"
+
+  # NOT YET EXERCISED against the real Chrome Web Store. The job is skipped until the repository
+  # variable CWS_ENABLED is "true". Setup (see docs/guides/publishing-to-chrome-web-store.md):
+  #   - create the environment "chrome-web-store" (it may require a manual approval);
+  #   - add the environment secret CWS_SERVICE_ACCOUNT_KEY (the JSON key of the service account
+  #     that is added in the store dashboard under Account);
+  #   - add the variables CWS_PUBLISHER_ID and CWS_EXTENSION_ID, and optionally CWS_PUBLISH_TYPE
+  #     (STAGED_PUBLISH, the default, holds the approved version until you publish it by hand;
+  #     DEFAULT_PUBLISH publishes on approval).
+  # The first item and its listing must exist already: the v2 API cannot create items.
+  store:
+    name: Upload to the Chrome Web Store
+    needs: [build, publish]
+    if: github.event_name == 'push' && vars.CWS_ENABLED == 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    environment: chrome-web-store
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the release files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: spool-release
+          path: release-files
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # The store gets the same bytes as the GitHub release. The key goes to a private file that
+      # is removed at the end, and only the path reaches the script.
+      - name: Upload and submit
+        env:
+          KEY_JSON: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
+          CWS_PUBLISH_TYPE: ${{ vars.CWS_PUBLISH_TYPE || 'STAGED_PUBLISH' }}
+          ZIP: release-files/${{ needs.build.outputs.zip }}
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/cws-key.json"
+          trap 'rm -f "$key"' EXIT
+          (umask 077 && printf '%s' "$KEY_JSON" > "$key")
+          GOOGLE_APPLICATION_CREDENTIALS="$key" node .github/scripts/cws-upload.mjs "$ZIP"

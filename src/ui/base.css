@@ -1,0 +1,434 @@
+/* Spool shared components for extension pages. Needs tokens.css (link it first).
+ * Contents: reset, type ramp, app bar, buttons, icons, segmented control, keycaps, cards,
+ * notices, progress, focus ring. No @import: each page links its own stylesheets. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Type ramp: caption 12/16, body 14/20, strong 14/20 semibold, subtitle 20/28,
+ * title 28/36. Display face from 20 px up. */
+
+.sp-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-strong);
+  overflow-wrap: anywhere;
+}
+
+.sp-subtitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-subtitle);
+  line-height: var(--lh-subtitle);
+  font-weight: var(--fw-strong);
+}
+
+.sp-strong {
+  font-weight: var(--fw-strong);
+}
+
+.sp-caption {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.sp-muted {
+  color: var(--muted);
+}
+
+.sp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+a:hover {
+  color: var(--accent-text-hover);
+}
+
+/* Focus ring: a 2 px amber ring with a 1 px dark halo outside it, so it shows on any ground
+ * (amber on white alone is 1.8:1). */
+
+:focus-visible {
+  outline: 1px solid var(--halo);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* App bar ------------------------------------------------------------------------------------ */
+
+.sp-appbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.sp-appbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: var(--page-max);
+  height: var(--bar-height);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.sp-glyph {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.sp-appname {
+  font-weight: var(--fw-strong);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.sp-spacer {
+  flex: 1;
+}
+
+/* Icons: SVG files used as masks, so they take the text color. */
+
+.sp-icon {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  forced-color-adjust: none;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.sp-icon-copy {
+  -webkit-mask-image: url(icons/copy.svg);
+  mask-image: url(icons/copy.svg);
+}
+
+.sp-icon-download {
+  -webkit-mask-image: url(icons/download.svg);
+  mask-image: url(icons/download.svg);
+}
+
+.sp-icon-check {
+  -webkit-mask-image: url(icons/check.svg);
+  mask-image: url(icons/check.svg);
+}
+
+.sp-icon-folder {
+  -webkit-mask-image: url(icons/folder.svg);
+  mask-image: url(icons/folder.svg);
+}
+
+.sp-icon-sliders {
+  -webkit-mask-image: url(icons/sliders.svg);
+  mask-image: url(icons/sliders.svg);
+}
+
+/* Buttons ------------------------------------------------------------------------------------ */
+
+.sp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  line-height: var(--lh-body);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-enter),
+    border-color var(--dur-fast) var(--ease-enter),
+    color var(--dur-fast) var(--ease-enter);
+}
+
+.sp-btn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.sp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sp-btn-lg {
+  height: 44px;
+  padding: 0 16px;
+  gap: 8px;
+}
+
+.sp-btn-primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: var(--fw-strong);
+}
+
+.sp-btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.sp-btn-primary:active:not(:disabled) {
+  background: var(--accent-press);
+}
+
+.sp-btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+/* The third choice: no frame, muted text. */
+.sp-btn-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.sp-btn-quiet:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* A quiet text button: looks like a link, acts like a button. */
+.sp-btn-link {
+  height: auto;
+  min-height: 24px;
+  padding: 0 4px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent-text);
+  font-weight: var(--fw-strong);
+}
+
+.sp-btn-link:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent-text-hover);
+  text-decoration: underline;
+}
+
+/* Shown after a copy: amber tint, check icon. The page sets data-flash for 1.5 s. */
+.sp-btn[data-flash],
+.sp-btn[data-flash]:hover:not(:disabled),
+.sp-btn[data-flash]:active:not(:disabled) {
+  border-color: var(--accent-edge);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-weight: var(--fw-strong);
+}
+
+.sp-btn[data-flash] .sp-icon {
+  -webkit-mask-image: url(icons/check.svg);
+  mask-image: url(icons/check.svg);
+}
+
+/* Segmented control -------------------------------------------------------------------------- */
+
+.sp-seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--track);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-seg);
+}
+
+.sp-seg [role='tab'] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-enter),
+    color var(--dur-fast) var(--ease-enter);
+}
+
+.sp-seg [role='tab']:hover {
+  color: var(--text);
+}
+
+.sp-seg [role='tab'][aria-selected='true'] {
+  background: var(--raised);
+  box-shadow: var(--shadow-raise);
+  color: var(--text);
+  font-weight: var(--fw-strong);
+}
+
+.sp-seg [role='tab'][aria-selected='true']:focus-visible {
+  box-shadow:
+    var(--shadow-raise),
+    0 0 0 2px var(--accent);
+}
+
+.sp-seg-count {
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keycaps ------------------------------------------------------------------------------------ */
+
+.sp-kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.sp-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* Cards and notices -------------------------------------------------------------------------- */
+
+.sp-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.sp-notice {
+  padding: 10px 16px;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+.sp-notice-title {
+  font-weight: var(--fw-strong);
+}
+
+.sp-notice ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* Progress ----------------------------------------------------------------------------------- */
+
+.sp-progress {
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--line);
+  accent-color: var(--accent);
+  appearance: none;
+  -webkit-appearance: none;
+  overflow: hidden;
+}
+
+.sp-progress::-webkit-progress-bar {
+  background: var(--line);
+}
+
+.sp-progress::-webkit-progress-value {
+  background: var(--accent);
+  transition: width var(--dur-base) var(--ease-enter);
+}
+
+/* Forced colors (a high contrast theme) ------------------------------------------------------ */
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    box-shadow: none;
+  }
+
+  .sp-btn-primary {
+    border-color: ButtonText;
+  }
+
+  .sp-seg [role='tab'][aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .sp-progress::-webkit-progress-value {
+    background: Highlight;
+  }
+}

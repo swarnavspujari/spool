@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Page with an embedded composer</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; margin: 24px; }
+    iframe { width: 640px; height: 260px; border: 1px solid #888; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Host page</h1>
+  <!-- Like a chat app with a composer in a frame. The scripts of the host page (analytics, session
+       replay) must not get the tiles that the user meant for the frame. -->
+  <iframe id="frame" src="/shelf-editor.html" title="Embedded composer"></iframe>
+  <script>
+    window.__topPaste = 0;
+    // The capture phase on the document sees a paste that goes anywhere in the host page.
+    document.addEventListener('paste', () => { window.__topPaste += 1; }, true);
+  </script>
+</body>
+</html>

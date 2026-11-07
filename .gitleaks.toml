@@ -1,0 +1,13 @@
+title = "Spool gitleaks configuration"
+
+[extend]
+useDefault = true
+
+# The unit tests use random UUIDs as fixture tokens for the shelf (`const TOKEN = '<uuid>'`).
+# They are not credentials. The rule is narrow: only test files, and the matched secret must
+# be exactly a UUID.
+[[allowlists]]
+description = "UUID fixture tokens in the unit tests"
+condition = "AND"
+paths = ['''test/unit/.*''']
+regexes = ['''^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$''']

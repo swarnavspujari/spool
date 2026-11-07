@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat with pinned elements</title>
+  <style>
+    /*
+      Like chat-inner.html (same top bar, panel, sticky header and fixed composer), plus the two
+      things that a "hide every fixed or sticky element" capture gets wrong:
+        1. Sticky date dividers in the middle of the content. They are in the flow (each takes 16
+           px between two bands) and stick below the header while their part is in view. Hidden,
+           they would leave a gap in every frame; left alone, they would repeat in every frame.
+           They must show exactly once, at their place between the bands.
+        2. A fade above the composer: fixed, pointer-events: none. A hit test never reports it,
+           but it paints over the bands in every frame, so it must be hidden.
+    */
+    html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: #fff; }
+
+    /* Fixed bar of the app (outside the panel). rgb(60, 64, 72) */
+    #topbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: rgb(60, 64, 72); }
+
+    /* The scrolling panel: 480 px wide, centred, from y = 64 px to 32 px above the viewport bottom. */
+    #panel {
+      position: absolute; top: 64px; left: 50%; width: 480px; margin-left: -240px;
+      height: calc(100vh - 64px - 32px);
+      overflow-y: auto; overflow-x: hidden;
+      background: rgb(244, 244, 244);
+    }
+
+    /* Sticky header INSIDE the panel (in the flow at the top, then pinned). rgb(16, 24, 48) */
+    #header { position: sticky; top: 0; z-index: 3; height: 48px; background: rgb(16, 24, 48); }
+
+    /* Date divider at the start of a part: in the flow, sticky below the header, bounded by its
+       part (it is pushed away by the next part, like a date divider in a chat). rgb(200, 40, 120) */
+    .part { display: block; }
+    .divider { position: sticky; top: 48px; z-index: 2; height: 16px; background: rgb(200, 40, 120); }
+
+    /* Fade over the bottom of the panel, right above the composer. Magenta to transparent. */
+    #fade {
+      position: fixed; bottom: 88px; left: 50%; width: 480px; margin-left: -240px; height: 64px;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(255, 0, 255, 0.9), rgba(255, 0, 255, 0));
+    }
+
+    /* Fixed composer over the bottom of the panel. rgb(240, 224, 32) */
+    #composer {
+      position: fixed; bottom: 32px; left: 50%; width: 480px; margin-left: -240px; height: 56px;
+      background: rgb(240, 224, 32);
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+  <!--
+    Panel content: header (48 px), part 0 = bands 0-199, part 1 = divider (16 px) + bands 200-399,
+    part 2 = divider (16 px) + bands 400-599. Each band is 8 px.
+  -->
+  <div id="panel">
+    <div id="header"></div>
+  </div>
+  <div id="fade"></div>
+  <div id="composer"></div>
+  <script type="module">
+    import { appendBands } from './fixture-bands.js';
+    const PART_BANDS = 200;
+    const PARTS = 3;
+    const panel = document.getElementById('panel');
+    if (!panel) throw new Error('panel missing');
+    for (let k = 0; k < PARTS; k++) {
+      const part = document.createElement('section');
+      part.className = 'part';
+      if (k > 0) {
+        const divider = document.createElement('div');
+        divider.className = 'divider';
+        divider.id = `divider${k}`;
+        part.appendChild(divider);
+      }
+      appendBands(part, k * PART_BANDS, (k + 1) * PART_BANDS);
+      panel.appendChild(part);
+    }
+    document.documentElement.dataset.bands = String(PART_BANDS * PARTS);
+    // The first band of each part after the first: a divider sits right before it.
+    document.documentElement.dataset.dividers = Array.from({ length: PARTS - 1 }, (_, i) => (i + 1) * PART_BANDS).join(',');
+  </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Page that covers the card of the shelf</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; margin: 24px; }
+    #editor { min-height: 120px; padding: 12px; border: 1px solid #888; border-radius: 8px; }
+    /* A fake "Accept" button over the corner where the card of the shelf is. It ignores the
+       pointer, so a click goes through it to what is below: the real button of the shelf. */
+    #cover { position: fixed; right: 8px; bottom: 8px; width: 400px; height: 300px; margin: 0;
+      border: 0; background: rgba(240, 240, 240, 0.97); color: #222; padding: 24px;
+      pointer-events: none; font: 600 18px system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <h1>Totally normal page</h1>
+  <div id="editor" contenteditable="true" role="textbox" aria-label="Message"></div>
+  <div id="cover" popover="manual">Accept the cookies</div>
+  <script>
+    window.__pasted = null;
+    window.__seen = 0;
+    document.getElementById('editor').addEventListener('paste', (event) => {
+      window.__seen += 1;
+      const files = [...(event.clipboardData?.files ?? [])];
+      window.__pasted = { names: files.map((f) => f.name), trusted: event.isTrusted };
+      event.preventDefault();
+    });
+    const cover = document.getElementById('cover');
+    let timer = null;
+    // The page opens its element after the card, and keeps it on top: showing it again puts it at
+    // the end of the top layer, above the card.
+    window.cover = (on) => {
+      clearInterval(timer);
+      if (!on) {
+        cover.hidePopover();
+        return;
+      }
+      cover.showPopover();
+      timer = setInterval(() => {
+        cover.hidePopover();
+        cover.showPopover();
+      }, 60);
+    };
+  </script>
+</body>
+</html>

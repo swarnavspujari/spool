@@ -1,0 +1,470 @@
+/* Spool options page. Tokens and shared components: ../ui/tokens.css and ../ui/base.css. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px var(--gutter) 24px;
+  animation: options-in var(--dur-base) var(--ease-enter) both;
+}
+
+@keyframes options-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Groups and rows ---------------------------------------------------------------------------- */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  scroll-margin-top: 16px;
+}
+
+.group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row-label {
+  display: block;
+}
+
+.group-title {
+  margin: 0 0 4px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-strong);
+}
+
+/* Opened with #save: the group shows for a moment, so the user sees where they landed.
+ * The page adds the class and removes it after 1.6 s; the ring fades in and out. */
+.group {
+  border-radius: var(--radius-lg);
+  transition: box-shadow var(--dur-slow) var(--ease-enter);
+}
+
+.group.is-target {
+  box-shadow:
+    0 0 0 6px var(--bg),
+    0 0 0 8px var(--accent);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-height: 56px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.row-text {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.row-text > label {
+  display: block;
+}
+
+.row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row-title .sp-icon {
+  color: var(--muted);
+}
+
+.row-title-text {
+  font-variant-numeric: tabular-nums;
+}
+
+.row-title-text.is-empty {
+  color: var(--muted);
+}
+
+.row-buttons {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.row-help {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--muted);
+}
+
+.row-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Controls ----------------------------------------------------------------------------------- */
+
+.select,
+.text-input {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.select {
+  min-width: 132px;
+}
+
+.text-input {
+  width: 180px;
+}
+
+/* A switch: a checkbox drawn as a track and a knob. */
+.switch {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 20px;
+  margin: 0;
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-enter),
+    border-color var(--dur-fast) var(--ease-enter);
+}
+
+.switch::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    transform var(--dur-fast) var(--ease-enter),
+    background-color var(--dur-fast) var(--ease-enter);
+}
+
+.switch:checked {
+  border-color: var(--accent-edge);
+  background: var(--accent);
+}
+
+.switch:checked::before {
+  background: var(--on-accent);
+  transform: translateX(20px);
+}
+
+.switch-state {
+  min-width: 2ch;
+}
+
+/* The tile size: two cards, one for each tier. */
+.row-fieldset {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 16px 12px;
+}
+
+.row-fieldset > legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.cards {
+  display: grid;
+  clear: both;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 8px;
+}
+
+.card-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-enter),
+    border-color var(--dur-fast) var(--ease-enter);
+}
+
+.card-option:has(input:checked) {
+  border-color: var(--accent-edge);
+  background: var(--accent-tint-soft);
+}
+
+.card-option input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--accent-edge);
+}
+
+.card-title {
+  display: block;
+}
+
+.card-aside {
+  color: var(--muted);
+}
+
+.card-detail {
+  display: block;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Save bar ----------------------------------------------------------------------------------- */
+
+.savebar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+}
+
+.savebar-text {
+  flex: 1 1 200px;
+  color: var(--muted);
+}
+
+.savebar-text[data-level='ok'] {
+  color: var(--text);
+}
+
+.savebar-text[data-level='warn'] {
+  color: var(--accent-text);
+}
+
+.savebar-text[data-level='error'] {
+  color: var(--danger);
+  font-weight: var(--fw-strong);
+}
+
+.savebar .sp-btn-primary {
+  padding: 0 20px;
+}
+
+/* Welcome and reconnect ---------------------------------------------------------------------- */
+
+[data-view='welcome'] .page {
+  max-width: 960px;
+}
+
+.welcome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+  padding-top: 24px;
+}
+
+.welcome-main {
+  flex: 999 1 460px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.welcome-side {
+  flex: 1 1 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.welcome-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[tabindex='-1']:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.welcome-lead,
+.welcome-card-text {
+  color: var(--muted);
+}
+
+.welcome-lead strong,
+.welcome-card-text strong {
+  color: var(--text);
+}
+
+/* The main choice has a row of its own; the other choices share the row below it. */
+.welcome-actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: start;
+  gap: 8px;
+}
+
+.welcome-actions:empty {
+  display: none;
+}
+
+.welcome-actions .sp-btn-primary {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.welcome-actions .sp-btn {
+  text-align: center;
+}
+
+.welcome-message {
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.welcome-message[data-level='error'] {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.welcome-card,
+.reconnect {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.reconnect {
+  gap: 12px;
+  padding: 20px;
+}
+
+.welcome .sp-btn-link {
+  min-height: 44px;
+  margin-left: -4px;
+}
+
+.welcome-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+}
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.tree-line {
+  padding-left: calc(var(--depth, 0) * 12px);
+  overflow-wrap: anywhere;
+}
+
+.tree-note {
+  padding-left: 12px;
+  color: var(--muted);
+}
+
+.moves {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  align-items: baseline;
+  margin: 0;
+}
+
+.moves dd {
+  margin: 0;
+  font-weight: var(--fw-strong);
+  overflow-wrap: anywhere;
+}
+
+/* Footer ------------------------------------------------------------------------------------- */
+
+.page-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--muted);
+}
+
+.page-footer .sp-btn-link {
+  margin-left: -4px;
+  font-size: var(--fs-caption);
+}
+
+@media (forced-colors: active) {
+  .switch:checked {
+    background: Highlight;
+  }
+
+  .switch::before {
+    background: ButtonText;
+  }
+
+  .switch:checked::before {
+    background: HighlightText;
+  }
+}

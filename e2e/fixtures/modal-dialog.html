@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modal dialog with a scroller</title>
+  <style>
+    /*
+      A modal <dialog> over a page. The dialog is in the top layer and makes the rest of the page
+      inert, so the overlay of the extension must go into the top layer (and into the dialog) to be
+      seen and used. The scroller to capture is inside the dialog.
+    */
+    html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: #fff; }
+
+    /* A fixed layer behind the dialog with the highest z-index: a big z-index does not beat the top layer. */
+    #curtain { position: fixed; inset: 0; z-index: 2147483647; background: rgb(60, 64, 72); }
+
+    /* 480 x 640 px, centred by the browser (margin: auto). */
+    #dlg {
+      width: 480px; height: 640px; padding: 0; border: 0; overflow: hidden;
+      background: rgb(244, 244, 244);
+    }
+    #panel { height: 640px; overflow-y: auto; overflow-x: hidden; }
+    /* The browser focuses the dialog and draws a focus ring around it once a key is used. The ring
+       would be 1 px rows of another colour at the edges of every frame, which the seam check flags. */
+    #dlg, #dlg:focus, #dlg:focus-visible, #panel:focus, #panel:focus-visible { outline: none; }
+
+    /* Dialog opened later by a test: covers the whole viewport. */
+    #late { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; border: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <div id="curtain"></div>
+  <dialog id="dlg"><div id="panel"></div></dialog>
+  <script type="module">
+    import { appendBands, bandCountFromQuery } from './fixture-bands.js';
+    const count = bandCountFromQuery(400);
+    const panel = document.getElementById('panel');
+    if (panel) appendBands(panel, 0, count);
+    document.documentElement.dataset.bands = String(count);
+    document.getElementById('dlg').showModal();
+  </script>
+</body>
+</html>

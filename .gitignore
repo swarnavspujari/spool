@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.e2e-build/
+test-results/
+playwright-report/
+blob-report/
+coverage/
+*.log
+.env
+.env.*
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

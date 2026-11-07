@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Spool",
+  "short_name": "Spool",
+  "version": "1.1.0",
+  "description": "Screenshot a whole scrolling chat or page. Get one tall image, plus screenshots sized for your AI to read at full detail.",
+  "minimum_chrome_version": "120",
+  "incognito": "not_allowed",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Spool it",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/sw/service-worker.js",
+    "type": "module"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "start-capture": {
+      "suggested_key": { "default": "Alt+Shift+S", "mac": "MacCtrl+Shift+S" },
+      "description": "Spool a scrolling area"
+    },
+    "insert-capture": {
+      "suggested_key": { "default": "Alt+Shift+V", "mac": "MacCtrl+Shift+V" },
+      "description": "Insert the last capture into your chat"
+    }
+  },
+  "permissions": ["activeTab", "clipboardWrite", "scripting", "offscreen", "storage", "downloads"],
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'"
+  }
+}

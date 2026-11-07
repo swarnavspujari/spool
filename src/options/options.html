@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Spool settings</title>
+    <link rel="icon" href="../../icons/icon-32.png" />
+    <link rel="stylesheet" href="../ui/tokens.css" />
+    <link rel="stylesheet" href="../ui/base.css" />
+    <link rel="stylesheet" href="options.css" />
+    <script type="module" src="options.js"></script>
+  </head>
+  <body>
+    <header class="sp-appbar">
+      <div class="sp-appbar-inner">
+        <img class="sp-glyph" src="../ui/glyph.svg" alt="" width="24" height="24" />
+        <span class="sp-appname">Spool</span>
+      </div>
+    </header>
+
+    <main class="page">
+      <!-- Welcome: opens once on install, and for "Set up" on the toast (options.html#welcome and
+           #setup). The page fills it from setup-model.js. -->
+      <div id="welcome" class="welcome" hidden>
+        <div class="welcome-main">
+          <div id="welcome-live" class="welcome-flow" aria-live="polite">
+            <h1 id="welcome-heading" class="sp-title" tabindex="-1"></h1>
+            <p id="welcome-lead" class="welcome-lead"></p>
+          </div>
+          <div id="welcome-message" class="welcome-message" role="status" hidden>
+            <p id="welcome-message-title" class="sp-strong" hidden></p>
+            <p id="welcome-message-text"></p>
+          </div>
+          <div id="welcome-actions" class="welcome-actions"></div>
+          <section id="welcome-callout" class="sp-notice welcome-callout" hidden>
+            <p id="welcome-callout-title" class="sp-notice-title"></p>
+            <p id="welcome-callout-text"></p>
+          </section>
+          <section id="welcome-next" class="sp-card welcome-card" aria-labelledby="next-title" hidden>
+            <h2 id="next-title" class="sp-strong">What happens next</h2>
+            <div id="welcome-next-text" class="welcome-card-text"></div>
+          </section>
+          <section class="sp-card welcome-card" aria-labelledby="keeping-title">
+            <h2 id="keeping-title" class="sp-strong"></h2>
+            <p id="keeping-text" class="welcome-card-text"></p>
+            <p>
+              <button type="button" id="open-settings" class="sp-btn sp-btn-link"></button>
+            </p>
+          </section>
+        </div>
+        <aside class="welcome-side">
+          <section class="sp-card welcome-card" aria-labelledby="layout-title">
+            <h2 id="layout-title" class="sp-strong">Every capture gives you</h2>
+            <p id="layout-place" class="welcome-card-text"></p>
+            <ul id="layout-tree" class="tree"></ul>
+          </section>
+          <section class="sp-card welcome-card" aria-labelledby="moves-title">
+            <h2 id="moves-title" class="sp-strong">Your three moves</h2>
+            <dl id="moves-list" class="moves"></dl>
+            <p id="moves-warning" class="welcome-card-text"></p>
+          </section>
+        </aside>
+      </div>
+
+      <div id="settings-view" class="groups">
+        <h1 class="sp-title">Settings</h1>
+
+        <!-- Reconnect: options.html#reconnect, and after a click on "Reconnect". -->
+        <section
+          id="reconnect"
+          class="sp-card reconnect"
+          aria-labelledby="reconnect-heading"
+          aria-live="polite"
+          hidden
+        >
+          <h2 id="reconnect-heading" class="sp-subtitle" tabindex="-1"></h2>
+          <p id="reconnect-lead" class="welcome-lead"></p>
+          <div id="reconnect-actions" class="welcome-actions"></div>
+          <p id="reconnect-tip" class="welcome-lead" hidden></p>
+        </section>
+
+        <form id="settings-form" class="groups" novalidate aria-busy="true">
+          <div id="fields" class="groups"></div>
+        </form>
+
+        <section class="group" aria-labelledby="group-shortcut">
+          <h2 id="group-shortcut" class="group-title">Shortcut</h2>
+          <div class="group-rows">
+            <div class="row">
+              <div class="row-text">
+                <div id="label-shortcut-start">Start Spool</div>
+                <div class="row-help">
+                  The browser owns this key. Change opens its shortcuts page.
+                </div>
+              </div>
+              <span id="shortcut-start" class="sp-keys" aria-live="polite">Loading…</span>
+              <button
+                type="button"
+                id="change-shortcut-start"
+                class="sp-btn"
+                aria-label="Change shortcut"
+                aria-describedby="label-shortcut-start"
+              >
+                Change
+              </button>
+            </div>
+            <div class="row">
+              <div class="row-text">
+                <div id="label-shortcut-insert">Insert last capture</div>
+                <div class="row-help">
+                  Press it in your chat to insert the screenshots of the last capture.
+                </div>
+              </div>
+              <span id="shortcut-insert" class="sp-keys" aria-live="polite">Loading…</span>
+              <button
+                type="button"
+                id="change-shortcut-insert"
+                class="sp-btn"
+                aria-label="Change shortcut"
+                aria-describedby="label-shortcut-insert"
+              >
+                Change
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div class="savebar">
+          <p id="status" class="savebar-text" role="status" aria-live="polite" data-level="info"></p>
+          <button type="button" id="discard" class="sp-btn" disabled>Discard</button>
+          <button type="submit" id="save-settings" form="settings-form" class="sp-btn sp-btn-primary">
+            Save
+          </button>
+        </div>
+
+        <footer class="page-footer">
+          <p id="version"></p>
+          <p>
+            Spool keeps these settings in your browser. It has no network access and never sends
+            your captures anywhere. If you turn on browser sync, the browser can sync the settings.
+          </p>
+          <p>
+            <button type="button" id="reset" class="sp-btn sp-btn-link">Reset to defaults</button>
+          </p>
+        </footer>
+      </div>
+    </main>
+  </body>
+</html>

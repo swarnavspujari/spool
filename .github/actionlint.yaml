@@ -1,0 +1,4 @@
+# The runner label ubuntu-26.04 is valid on GitHub; older actionlint releases do not know it yet.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04

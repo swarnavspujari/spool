@@ -1,0 +1,161 @@
+name: CI
+
+# verify  - lock file, reproducible zip, npm signatures, policy, typecheck, unit tests
+# e2e     - one job per Playwright project (4 device scales and the performance budget)
+# gate    - "CI result": the only check a ruleset requires
+#
+# Every job starts at once, so a run takes as long as its slowest e2e job.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+# Pull request: a new push cancels the older run of that pull request.
+# Push to main: one group per commit, so no run on main is ever cancelled.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-26.04
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # These two steps read files and run Node built-ins only. No package is installed yet.
+      - name: Check the lock file
+        run: node .github/scripts/check-lockfile.mjs package-lock.json
+
+      - name: Build the zip twice and compare
+        run: |
+          node scripts/package.mjs
+          first="$(sha256sum dist/*.zip | cut -d' ' -f1)"
+          node scripts/package.mjs > /dev/null
+          second="$(sha256sum dist/*.zip | cut -d' ' -f1)"
+          if [ "$first" != "$second" ]; then
+            echo "::error::Two builds of one commit give different zips ($first, $second)"
+            exit 1
+          fi
+          (cd dist && sha256sum --check -- *.sha256)
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Check npm signatures
+        run: npm audit signatures
+
+      - name: Policy, typecheck and unit tests
+        run: npm run check
+
+  e2e:
+    name: E2E (${{ matrix.project }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep in step with playwright.config.js and SPOOL_E2E_EXPECTED_PROJECTS below.
+        project: [scale-1, scale-1.25, scale-1.5, scale-2, perf]
+    env:
+      # Browsers that run at the same time. The runner has 4 vCPU. Tune with the repository
+      # variable E2E_WORKERS (Settings > Secrets and variables > Actions > Variables).
+      SPOOL_E2E_WORKERS: ${{ vars.E2E_WORKERS || '3' }}
+      # playwright.config.js stops when it defines other projects than these.
+      SPOOL_E2E_EXPECTED_PROJECTS: scale-1,scale-1.25,scale-1.5,scale-2,perf
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # The browser version follows package-lock.json. The key changes with every lock file
+      # change, which costs one download (about 15 s) and never gives a wrong browser.
+      - name: Cache the Playwright browser
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+
+      # System libraries are never cached, so --with-deps runs every time. The download runs only
+      # on a cache miss. The tests use the full Chromium, so the headless shell is not needed.
+      - name: Install Chromium
+        run: npx playwright install --with-deps --no-shell chromium
+
+      - name: Run the e2e tests
+        timeout-minutes: 6
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: npm run test:e2e -- --project="$PROJECT"
+
+      - name: Summarize the e2e tests
+        id: summary
+        if: always()
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: node .github/scripts/e2e-summary.mjs test-results/results.json "End-to-end tests, $PROJECT"
+
+      # A failed run, or a run with a flaky test (passed only on the retry), keeps its report.
+      - name: Upload the Playwright report
+        if: failure() || steps.summary.outputs.flaky > 0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # The one check to require. A matrix has one name per leg, so a ruleset would be fragile if it
+  # listed the legs. This job always runs and fails unless every job it needs succeeded.
+  gate:
+    name: CI result
+    if: always()
+    needs: [verify, e2e]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require that every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != success ]; then
+              echo "::error::A required job ended with \"$result\"."
+              exit 1
+            fi
+          done

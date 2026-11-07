@@ -1,0 +1,42 @@
+version: 2
+
+# Version updates are monthly. Security updates arrive at once and ignore the schedule and the
+# cooldown.
+#
+# cooldown: a release waits 7 days before Dependabot proposes it. A release that was published by
+# a hijacked account is usually found and withdrawn within that time.
+#
+# groups: the first matching group takes the package. Playwright has its own pull request: it
+# changes the Chromium version, and with it the pixels that the e2e tests compare. A major
+# version of a development package is never in a group, so it is reviewed alone.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+    groups:
+      playwright:
+        patterns: ['@playwright/*', 'playwright', 'playwright-core']
+      type-definitions:
+        patterns: ['@types/*']
+        update-types: [minor, patch]
+      dev-tools:
+        dependency-type: development
+        patterns: ['*']
+        update-types: [minor, patch]

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two scrolling panels</title>
+  <style>
+    /* Like a chat app with a sidebar: the page never scrolls, two panels do. A text field above
+       them holds the keyboard focus before the capture starts (e2e/overlay-input.spec.js checks
+       that the focus comes back to it). */
+    html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: #fff; }
+
+    #editor { position: fixed; top: 16px; left: 40px; width: 300px; height: 32px; box-sizing: border-box; }
+
+    /* Left panel: 360 px wide from x = 40. Right panel: 520 px wide from x = 440. Both start at
+       y = 64 px and end 32 px above the bottom of the viewport. */
+    .panel {
+      position: absolute; top: 64px; height: calc(100vh - 64px - 32px);
+      overflow-y: auto; overflow-x: hidden; background: rgb(244, 244, 244);
+    }
+    #a { left: 40px; width: 360px; }
+    #b { left: 440px; width: 520px; }
+  </style>
+</head>
+<body>
+  <input id="editor" type="text" aria-label="Message">
+  <div id="a" class="panel"></div>
+  <div id="b" class="panel"></div>
+  <script type="module">
+    import { appendBands, bandCountFromQuery } from './fixture-bands.js';
+    const count = bandCountFromQuery(600);
+    for (const id of ['a', 'b']) {
+      const panel = document.getElementById(id);
+      if (panel) appendBands(panel, 0, count);
+    }
+    document.documentElement.dataset.bands = String(count);
+  </script>
+</body>
+</html>

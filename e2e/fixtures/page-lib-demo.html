@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spool page-lib demo</title>
+    <!--
+      Static page for the page-lib and overlay tests. Sections, top to bottom:
+        #doc      plain document scroll
+        #chat     chat-style scroller: sticky header inside, fixed #footer over the viewport
+        #nested   a scroller (#outer) that holds a second scroller (#inner)
+        #clipped  overflow: hidden (never a scroll target)
+        #shadow   a scroller inside an open shadow root
+      The page and the scrollers use scroll-behavior: smooth on purpose.
+    -->
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        padding: 44px 0 56px;
+        font: 16px/24px system-ui, sans-serif;
+        color: #14181f;
+        background: #f2f4f7;
+      }
+      section {
+        padding: 24px;
+        border-bottom: 1px solid #c9cfd8;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font: 600 20px/28px system-ui, sans-serif;
+      }
+      .line {
+        margin: 0;
+        height: 24px;
+      }
+
+      #site-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        height: 44px;
+        padding: 0 24px;
+        line-height: 44px;
+        font-weight: 600;
+        color: #fff;
+        background: #1a62ff;
+      }
+      #footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        height: 56px;
+        padding: 0 24px;
+        line-height: 56px;
+        color: #fff;
+        background: #14181f;
+      }
+
+      #doc {
+        height: 1100px;
+      }
+
+      .panel {
+        width: 520px;
+        height: 360px;
+        box-sizing: border-box;
+        border: 2px solid #1a62ff;
+        background: #fff;
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+      }
+      #chat-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        height: 40px;
+        padding: 0 12px;
+        line-height: 40px;
+        font-weight: 600;
+        background: #e6edff;
+      }
+      .msg {
+        height: 72px;
+        margin: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: #eef1f5;
+      }
+      .msg.mine {
+        background: #d9f7e8;
+      }
+
+      #inner {
+        width: 400px;
+        height: 160px;
+        box-sizing: border-box;
+        margin: 0 12px;
+        border: 1px solid #8a94a6;
+        overflow-y: auto;
+        background: #fffbe6;
+      }
+      .filler {
+        height: 200px;
+        padding: 12px;
+      }
+      .tall {
+        height: 600px;
+        padding: 12px;
+      }
+
+      #clipped {
+        width: 520px;
+        height: 120px;
+        overflow: hidden;
+        background: #fff;
+      }
+      #clipped > div {
+        height: 500px;
+        padding: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="site-header">Fixed site header</div>
+
+    <section id="doc">
+      <h2>Document scroll</h2>
+      <p class="line">The page itself scrolls here. Line 1.</p>
+      <p class="line">Line 2.</p>
+      <p class="line">Line 3.</p>
+    </section>
+
+    <section id="chat-section">
+      <h2>Chat-style scroller</h2>
+      <div id="chat" class="panel">
+        <div id="chat-header">Sticky chat header</div>
+        <div class="msg">Message 1</div>
+        <div class="msg mine">Message 2</div>
+        <div class="msg">Message 3</div>
+        <div class="msg mine">Message 4</div>
+        <div class="msg">Message 5</div>
+        <div class="msg mine">Message 6</div>
+        <div class="msg">Message 7</div>
+        <div class="msg mine">Message 8</div>
+        <div class="msg">Message 9</div>
+        <div class="msg mine">Message 10</div>
+        <div class="msg">Message 11</div>
+        <div class="msg mine">Message 12</div>
+      </div>
+    </section>
+
+    <section id="nested">
+      <h2>Nested scrollers</h2>
+      <div id="outer" class="panel">
+        <div class="filler">Outer, before the inner scroller</div>
+        <div id="inner">
+          <div class="tall">Inner scroller content</div>
+        </div>
+        <div class="filler">Outer, after the inner scroller</div>
+        <div class="filler">Outer, end</div>
+      </div>
+    </section>
+
+    <section id="clipped-section">
+      <h2>Overflow hidden</h2>
+      <div id="clipped">
+        <div>Clipped content. This element is not a scroll target.</div>
+      </div>
+    </section>
+
+    <section id="shadow">
+      <h2>Open shadow root</h2>
+      <div id="shadow-host"></div>
+    </section>
+
+    <div id="footer">Fixed footer</div>
+
+    <script>
+      // Builds the shadow root content (a static page cannot declare it without a polyfill).
+      (() => {
+        const host = document.getElementById('shadow-host');
+        const root = host.attachShadow({ mode: 'open' });
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(
+          '#scroller { width: 520px; height: 200px; box-sizing: border-box; overflow-y: auto;' +
+            ' border: 2px solid #8a94a6; background: #fff; }' +
+            ' .row { height: 40px; padding: 8px 12px; }',
+        );
+        root.adoptedStyleSheets = [sheet];
+        const scroller = document.createElement('div');
+        scroller.id = 'scroller';
+        for (let i = 1; i <= 20; i++) {
+          const row = document.createElement('div');
+          row.className = 'row';
+          row.textContent = 'Shadow row ' + i;
+          scroller.append(row);
+        }
+        root.append(scroller);
+      })();
+    </script>
+  </body>
+</html>

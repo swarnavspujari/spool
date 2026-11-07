@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Editor that refuses a synthetic paste</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; margin: 24px; }
+    #editor { min-height: 120px; padding: 12px; border: 1px solid #888; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Strict composer</h1>
+  <!-- Takes a paste only when the browser made it (isTrusted). A script's fake paste is ignored. -->
+  <div id="editor" contenteditable="true" role="textbox" aria-label="Message"></div>
+  <script>
+    window.__seen = 0;
+    document.getElementById('editor').addEventListener('paste', (event) => {
+      window.__seen += 1;
+      if (!event.isTrusted) return;
+      event.preventDefault();
+    });
+  </script>
+</body>
+</html>

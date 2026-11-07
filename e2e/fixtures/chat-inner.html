@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat with an inner scroller</title>
+  <style>
+    /* Like a chat app: the page never scrolls, one panel does. */
+    html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: #fff; }
+
+    /* Fixed bar of the app (outside the panel). rgb(60, 64, 72) */
+    #topbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: rgb(60, 64, 72); }
+
+    /* The scrolling panel: 480 px wide, centred, from y = 64 px to 32 px above the viewport bottom. */
+    #panel {
+      position: absolute; top: 64px; left: 50%; width: 480px; margin-left: -240px;
+      height: calc(100vh - 64px - 32px);
+      overflow-y: auto; overflow-x: hidden;
+      background: rgb(244, 244, 244);
+    }
+
+    /* Sticky header INSIDE the panel (in the flow at the top, then pinned). rgb(16, 24, 48) */
+    #header { position: sticky; top: 0; height: 48px; background: rgb(16, 24, 48); }
+
+    /* Fixed composer over the bottom of the panel. rgb(240, 224, 32) */
+    #composer {
+      position: fixed; bottom: 32px; left: 50%; width: 480px; margin-left: -240px; height: 56px;
+      background: rgb(240, 224, 32);
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+  <!-- Panel content: header (48 px), then band i at panel y = 48 + 8 * i. -->
+  <div id="panel">
+    <div id="header"></div>
+  </div>
+  <div id="composer"></div>
+  <script type="module">
+    import { appendBands, bandCountFromQuery } from './fixture-bands.js';
+    const count = bandCountFromQuery(900);
+    const panel = document.getElementById('panel');
+    if (panel) appendBands(panel, 0, count);
+    document.documentElement.dataset.bands = String(count);
+
+    // ?clobber: markup that shadows names which the extension reads (DOM clobbering, see
+    // e2e/clobbering.spec.js). It is added last, after this page has used those names itself.
+    if (new URLSearchParams(location.search).has('clobber')) {
+      document.body.insertAdjacentHTML('beforeend', `
+        <form id="__spool" hidden>
+          <input type="hidden" name="agent"><input type="hidden" name="lib">
+          <input type="hidden" name="overlay"><input type="hidden" name="config">
+          <input type="hidden" name="overlayHosts">
+        </form>
+        <img hidden name="title"><img hidden name="documentElement"><img hidden name="body">
+        <img hidden name="scrollingElement"><img hidden name="elementsFromPoint">
+        <img hidden name="createElement"><img hidden name="createTextNode">
+        <img hidden name="querySelectorAll"><img hidden name="createTreeWalker">
+        <!-- A fixed bar over the top of the panel that is a <form>: its named inputs shadow the
+             properties the extension reads from an element it hides. rgb(200, 40, 120) -->
+        <form id="clobber-bar" style="position: fixed; top: 64px; left: 50%; width: 480px; margin-left: -240px; height: 40px; background: rgb(200, 40, 120);">
+          <input type="hidden" name="style"><input type="hidden" name="getBoundingClientRect">
+          <input type="hidden" name="parentElement"><input type="hidden" name="shadowRoot">
+          <input type="hidden" name="assignedSlot"><input type="hidden" name="clientHeight">
+          <input type="hidden" name="clientWidth"><input type="hidden" name="scrollTop">
+        </form>
+      `);
+    }
+  </script>
+</body>
+</html>

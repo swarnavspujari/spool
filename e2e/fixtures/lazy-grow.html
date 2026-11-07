@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lazy-loading inner scroller</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; background: #fff; }
+    #panel {
+      position: absolute; top: 64px; left: 50%; width: 480px; margin-left: -240px;
+      height: 512px; /* a multiple of 8, so the last band ends on the panel edge */
+      overflow-y: auto; overflow-x: hidden;
+      background: rgb(244, 244, 244);
+    }
+  </style>
+</head>
+<body>
+  <div id="panel"></div>
+  <script type="module">
+    import { appendBands } from './fixture-bands.js';
+
+    const START = 200;      // bands at load
+    const BATCH = 100;      // bands added per growth
+    const MAX_GROWTHS = 2;  // the list grows when the user reaches the bottom the first two times
+    const DELAY_MS = 60;    // simulated loading time (shorter than the extension's settle time)
+
+    const panel = document.getElementById('panel');
+    if (!panel) throw new Error('panel missing');
+    appendBands(panel, 0, START);
+
+    /** Read by the tests: how often the list grew and how many bands it has now. */
+    const state = { grown: 0, total: START, pending: false };
+    Object.defineProperty(globalThis, 'lazyState', { value: state });
+
+    panel.addEventListener('scroll', () => {
+      if (state.pending || state.grown >= MAX_GROWTHS) return;
+      if (panel.scrollTop + panel.clientHeight < panel.scrollHeight - 1) return;
+      state.pending = true;
+      setTimeout(() => {
+        appendBands(panel, state.total, state.total + BATCH);
+        state.total += BATCH;
+        state.grown += 1;
+        state.pending = false;
+        document.documentElement.dataset.bands = String(state.total);
+      }, DELAY_MS);
+    }, { passive: true });
+    document.documentElement.dataset.bands = String(START);
+  </script>
+</body>
+</html>

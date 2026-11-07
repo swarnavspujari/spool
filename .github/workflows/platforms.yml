@@ -1,0 +1,68 @@
+name: Platforms
+
+# Smoke test on macOS and Windows: the unit tests and the package build. Not a required check and
+# not run on pull requests, so a red run here means "go and look", never "block a merge".
+#
+# There is no e2e step on purpose. The e2e tests compare pixels against Chromium on the Linux
+# runner image, the window-fitting code of the fixtures was only ever run on Windows and Linux,
+# and the macOS runners (3 vCPU) would add flaky failures that tell us nothing about Spool. What
+# matters on a Mac or a Windows PC (shortcut labels, Option key, Retina capture) a headless run
+# cannot see; a person checks those by hand before a release.
+#
+# What this does cover: path and file name code under Windows rules (src/lib/names.js), and a
+# package that is byte-identical when built twice on each OS.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: platforms-${{ github.sha }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke:
+    name: Smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, windows-2025]
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Unit tests
+        run: npm test
+
+      # node, not sha256sum or shasum: the two runners have different tools.
+      - name: Build the package twice and compare
+        run: |
+          hash() { node -e "console.log(require('node:crypto').createHash('sha256').update(require('node:fs').readFileSync(process.argv[1])).digest('hex'))" "$1"; }
+          node scripts/package.mjs
+          first="$(hash dist/spool-*.zip)"
+          node scripts/package.mjs > /dev/null
+          second="$(hash dist/spool-*.zip)"
+          echo "first=$first second=$second"
+          [ "$first" = "$second" ]

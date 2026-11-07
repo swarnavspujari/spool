@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "chrome"]
+  },
+  "include": [
+    "scripts/**/*.mjs",
+    "test/**/*.js",
+    "e2e/**/*.js",
+    "playwright.config.js",
+    "types/**/*.d.ts"
+  ]
+}

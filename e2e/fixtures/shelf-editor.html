@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Editor that takes pasted files</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; margin: 24px; }
+    #editor { min-height: 120px; padding: 12px; border: 1px solid #888; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Chat composer</h1>
+  <!-- Like a chat composer: it takes pasted files and stops the default action. -->
+  <div id="editor" contenteditable="true" role="textbox" aria-label="Message"></div>
+  <script>
+    window.__pasted = null;
+    // The bytes of the pasted files (base64), set a moment after the paste: a File is read
+    // asynchronously. The spec compares them with the tiles of the capture.
+    window.__pastedBase64 = null;
+    const readBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1]);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    document.getElementById('editor').addEventListener('paste', (event) => {
+      const files = [...(event.clipboardData?.files ?? [])];
+      window.__pasted = {
+        names: files.map((f) => f.name),
+        types: files.map((f) => f.type),
+        sizes: files.map((f) => f.size),
+        trusted: event.isTrusted,
+      };
+      Promise.all(files.map(readBase64)).then((list) => {
+        window.__pastedBase64 = list;
+      });
+      event.preventDefault();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Spool capture</title>
+    <link rel="icon" href="../../icons/icon-32.png" />
+    <link rel="stylesheet" href="../ui/tokens.css" />
+    <link rel="stylesheet" href="../ui/base.css" />
+    <link rel="stylesheet" href="result.css" />
+    <script type="module" src="result.js"></script>
+  </head>
+  <body data-state="loading">
+    <header class="sp-appbar">
+      <div class="sp-appbar-inner">
+        <img class="sp-glyph" src="../ui/glyph.svg" alt="" width="24" height="24" />
+        <span class="sp-appname">Spool</span>
+        <span class="sp-spacer"></span>
+        <button
+          type="button"
+          id="open-settings"
+          class="sp-btn sp-btn-icon"
+          aria-label="Settings"
+          title="Settings"
+        >
+          <span class="sp-icon sp-icon-sliders" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page">
+      <section id="loading" class="sp-card state-card" aria-labelledby="load-text">
+        <p id="load-text" class="sp-strong" role="status">Loading the capture</p>
+        <progress
+          id="load-progress"
+          class="sp-progress"
+          max="1"
+          value="0"
+          aria-labelledby="load-text"
+        ></progress>
+      </section>
+
+      <section id="error" class="sp-card state-card state-error" role="alert" hidden>
+        <h2 class="sp-subtitle">Capture not available</h2>
+        <p id="error-text" class="state-text"></p>
+      </section>
+
+      <main id="content" class="content" hidden>
+        <div class="titlebar">
+          <div class="titles">
+            <h1 id="page-title" class="sp-title">Capture</h1>
+            <p id="summary" class="meta"></p>
+          </div>
+          <div class="sp-seg" role="tablist" aria-label="Output">
+            <button
+              type="button"
+              role="tab"
+              id="tab-ai"
+              class="seg-tab"
+              aria-selected="true"
+              aria-controls="panel-ai"
+            >
+              For AI<span id="tab-ai-count" class="sp-seg-count"></span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-people"
+              class="seg-tab"
+              aria-selected="false"
+              aria-controls="panel-people"
+              tabindex="-1"
+            >
+              For people<span id="tab-people-count" class="sp-seg-count"></span>
+            </button>
+          </div>
+        </div>
+
+        <section id="warnings" class="sp-notice" aria-labelledby="warnings-title" hidden>
+          <h2 id="warnings-title" class="sp-notice-title">Warnings</h2>
+          <ul id="warning-list"></ul>
+        </section>
+
+        <section class="build" aria-labelledby="build-text">
+          <p id="build-text" class="build-text" role="status"></p>
+          <progress
+            id="build-progress"
+            class="sp-progress"
+            max="1"
+            value="0"
+            aria-labelledby="build-text"
+          ></progress>
+        </section>
+
+        <section id="panel-ai" class="panel" role="tabpanel" aria-labelledby="tab-ai">
+          <div class="actionbar">
+            <button type="button" id="save-all" class="sp-btn sp-btn-lg sp-btn-primary" disabled>
+              <span class="sp-icon sp-icon-download" aria-hidden="true"></span>
+              <span class="sp-btn-label">Save all</span>
+            </button>
+            <p class="note">
+              <span>AI reads each screenshot at full size. <span id="save-hint"></span></span>
+              <span id="insert-hint" class="note-line" hidden></span>
+            </p>
+          </div>
+          <ol id="tile-grid" class="tile-grid" aria-label="AI screenshots"></ol>
+        </section>
+
+        <section id="panel-people" class="panel" role="tabpanel" aria-labelledby="tab-people" hidden>
+          <div class="actionbar">
+            <button
+              type="button"
+              id="copy-full"
+              class="sp-btn sp-btn-lg sp-btn-primary"
+              disabled
+            >
+              <span class="sp-icon sp-icon-copy" aria-hidden="true"></span>
+              <span class="sp-btn-label">Copy image</span>
+            </button>
+            <button type="button" id="save-full" class="sp-btn sp-btn-lg" disabled>
+              <span class="sp-icon sp-icon-download" aria-hidden="true"></span>
+              <span class="sp-btn-label">Save</span>
+            </button>
+            <p id="full-info" class="note"></p>
+          </div>
+          <div
+            id="people-scroll"
+            class="people-scroll"
+            role="region"
+            aria-label="Full image preview"
+            tabindex="0"
+          >
+            <div id="people-stack" class="stack"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer id="statusbar" class="statusbar" hidden>
+      <div class="statusbar-inner">
+        <span class="sp-icon sp-icon-folder" aria-hidden="true"></span>
+        <p id="status" class="status" role="status" data-tone="info"></p>
+        <button type="button" id="show-folder" class="sp-btn sp-btn-link" hidden>
+          Show in folder
+        </button>
+        <button type="button" id="allow-access" class="sp-btn sp-btn-link" hidden>
+          Allow folder access
+        </button>
+      </div>
+    </footer>
+  </body>
+</html>
